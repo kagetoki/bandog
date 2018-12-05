@@ -4,15 +4,29 @@ module CoreCommands =
     open System
     open DomainTypes
 
-    type UpdateCommand<'Id, 'Update> =
-        { Id : 'Id 
-          Updates : 'Update NonEmptyList }
+    type CommandMeta =
+        { OperationId : Guid
+          InitiatorId : UserId
+          CommandId : Guid
+          TimeStamp : DateTimeOffset }
 
-    type UserCreateCommand =
+    type Command<'Payload> =
+        { Meta : CommandMeta
+          Payload : 'Payload }
+
+    type UpdateCommandPayload<'AggregateId, 'Update> =
+        { AggregateId : 'AggregateId 
+          Payload : 'Update NonEmptyList }
+
+    type UpdateCommand<'AggregateId, 'Update> = Command<UpdateCommandPayload<'AggregateId, 'Update>>
+
+    type UserCreateCommandPayload =
         { Email : Email
           FullName : LetterString 
           Username : LetterAndDigitString option 
           BirthDate : BirthDate option }
+
+    type UserCreateCommand = Command<UserCreateCommandPayload>
 
     type BasicUserProfileUpdate =
         | FullName of LetterString

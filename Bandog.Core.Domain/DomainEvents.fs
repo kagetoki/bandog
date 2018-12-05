@@ -6,7 +6,9 @@ module DomainEvents =
     open CoreCommands
 
     type DomainEvent<'T> =
-        { TimeStamp : DateTimeOffset
+        { EventId : Guid
+          TimeStamp : DateTimeOffset
+          OperationId : Guid
           InitiatorId : UserId
           Payload : 'T }
 
