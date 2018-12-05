@@ -3,7 +3,20 @@
 module DomainTypes =
     open System
 
-    type UserId = Guid
+    [<Struct>]
+    type UserId = 
+        | System
+        | UserId of Guid
+        | Anonymous
+        with
+        static member tryParse str =
+            match str with
+            | "" | null -> None
+            | str when str.ToLower() = "system" -> Some System
+            | str ->
+                match Guid.TryParse str with
+                | (true, guid) -> UserId guid |> Some
+                | _ -> None
 
     type PictureId = Guid
 
@@ -62,7 +75,7 @@ module DomainTypes =
         | Unavailable
         | OneTime of AvailabilitySchedule
         | LongTerm of AvailabilitySchedule
-        | Any
+        | OpenToAnyCollaboration
 
     [<Struct>]
     type BasicGenre =
