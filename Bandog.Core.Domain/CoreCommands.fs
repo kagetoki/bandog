@@ -30,8 +30,8 @@ module CoreCommands =
 
     type BasicUserProfileUpdate =
         | FullName of LetterString
-        | PictureId of Guid
-        | BirthDate of BirthDate
+        | PictureId of Guid option
+        | BirthDate of BirthDate option
         | UserName of LetterAndDigitString
 
     type UpdateBasicUserProfileCommand = UpdateCommand<UserId, BasicUserProfileUpdate>

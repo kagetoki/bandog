@@ -15,6 +15,7 @@ module DomainTypes =
             | str when str.ToLower() = "system" -> Some System
             | str ->
                 match Guid.TryParse str with
+                | (true, guid) when guid = Guid.Empty -> Some Anonymous
                 | (true, guid) -> UserId guid |> Some
                 | _ -> None
 
@@ -39,27 +40,29 @@ module DomainTypes =
         | Clarinet
         | Sax
         | Trombone
+        | Vocals
 
     [<Struct>]
-    type Ability =
+    type MusicMakingSkill =
         | Composition
         | Mastering
         | Recording
         | Arrangement
         | TextWriting
+        | Improvising
 
     [<Struct>]
     type Skill =
         | Instrument of instrument:Instrument
-        | Ability of ability:Ability
+        | MusicMakingSkill of musicMakingSkill:MusicMakingSkill
 
+    [<Struct>]
     type SkillLevel =
         | Novice
         | Apprentice
         | Adept
-        | Mage
-        | ArchMage
-
+        | Maester
+        | GrandMaester
 
     type AvailabilitySchedule =
         | Weekend of AvailabilityHours
@@ -78,31 +81,39 @@ module DomainTypes =
         | OpenToAnyCollaboration
 
     [<Struct>]
-    type BasicGenre =
-        | Jazz
+    type MetalKind =
+        | Progressive | Nu | Heavy | Melodic | Death | Black | Thrash | Speed | Experimental
+
+    [<Struct>]
+    type JazzKind =
+        | Bebop | Hardbop | Fusion | Latin | Dark | Swing
+
+    [<Struct>]
+    type HipHopKind =
+        | Rap | RnB | Trip
+
+    [<Struct>]
+    type ElectroKind =
+        | Trance | House | Techno
+
+    [<Struct>]
+    type RockKind =
+        | Hard | Britpop | Indie | Alternative | Post | Punk | Grunge | Psychedelic | Surf
+
+    [<Struct>]
+    type Genre =
+        | Jazz of jazz: JazzKind option
         | Blues
         | Rock
-        | PowerMetal
-        | DeathMetal
-        | BlackMetal
-        | HeavyMetal
-        | NuMetal
-        | MelodicMetal
+        | Metal of metal: MetalKind option
         | Classic
         | Soul
         | Ambient
+        | Folk
         | Pop
-        | HipHop
+        | HipHop of hiphop: HipHopKind option
         | Core
-    and 
-        [<Struct>]
-        GenreAttributes =
-        | Progressive
-        | Neo
-        | Fusion
-        | Experimental
-
-    and Genre = BasicGenre * GenreAttributes option
+        | Electro of electro: ElectroKind option
 
     type SchoolName = NonEmptyString
 
@@ -113,19 +124,25 @@ module DomainTypes =
         | Master of SchoolName * Discipline
         | PhD of SchoolName * Discipline
 
+    type Location =
+        { Country : Country
+          StateOrDistrict : NonEmptyString
+          City : NonEmptyString }
+
     type AudioMeta =
         { Id            : AudioId
           UserId        : UserId
           Title         : NonEmptyString
-          Genre         : Genre NonEmptyList
-          AppliedSkills : Skill NonEmptyList
+          Genre         : Genre NonEmptySet
+          AppliedSkills : Skill NonEmptySet
           Duration      : TimeSpan }
 
     type BasicUserInfo =
         { Id        : UserId
           FullName  : LetterString
           Username  : LetterAndDigitString
-          PictureId : PictureId
+          PictureId : PictureId option
+          Location  : Location
           BirthDate : BirthDate option }
 
     type UserContactInfo =

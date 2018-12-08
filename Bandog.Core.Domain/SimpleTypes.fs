@@ -64,7 +64,7 @@ module SimpleTypes =
         static member tryCreate str =
             tryCreate (neither isWhiteSpaceString specialCharsRegex.IsMatch) LetterAndDigitString str
 
-    type 'T NonEmptyList =
+    type 'T NonEmptyList = //when 'T : equality =
         { Head : 'T 
           Tail : 'T list }
           with
@@ -74,6 +74,28 @@ module SimpleTypes =
             | h::t -> { Head = h; Tail = t} |> Some
           member this.ToList() =
             this.Head :: this.Tail
+          member this.Add item =
+            { Head = item; Tail = this.ToList() }
+          //member this.Remove item =
+          //  { this with Tail = List.filter ((<>) item) this.Tail }
+
+    type 'T NonEmptySet when 'T : comparison =
+        private NonEmptySet of 'T Set
+        with
+        member this.Value = match this with | NonEmptySet set -> set
+        member this.ToList() = this.Value |> List.ofSeq
+        member this.Add item =
+          match this with | NonEmptySet set -> NonEmptySet <| set.Add item
+        member this.Remove item =
+          match this with
+          | NonEmptySet set ->
+            let newSet = set.Remove item
+            if newSet.IsEmpty then set else newSet
+            |> NonEmptySet
+        static member ofSeq s =
+            let set = Set.ofSeq s
+            if set.IsEmpty then None
+            else NonEmptySet set |> Some
 
     [<Struct>]
     type BirthDate = private BirthDate of DateTimeOffset
