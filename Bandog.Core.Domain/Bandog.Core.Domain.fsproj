@@ -11,7 +11,7 @@
     <Compile Include="CoreCommands.fs" />
     <Compile Include="DomainEvents.fs" />
     <Compile Include="CoreDomain.Implementation.fs" />
-    <Compile Include="FindMusician.fs" />
+    <Compile Include="MusicSearch.fs" />
   </ItemGroup>
 
 </Project>

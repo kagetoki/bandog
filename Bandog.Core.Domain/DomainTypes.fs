@@ -154,5 +154,6 @@ module DomainTypes =
         { UserInfo            : BasicUserInfo
           Skills              : Map<Skill, SkillLevel>
           Degrees             : Degree Set
+          Genres              : Genre Set
           Audios              : Map<AudioId, AudioMeta>
           CollaborationStatus : CollaborationStatus }

@@ -1,12 +1,29 @@
 ﻿namespace Bandog.Core.Domain
 
-module FindMusician =
+module MusicSearch =
     open DomainTypes
 
     type SearchCriteria =
-        { Skills : Map<Skill, SkillLevel>
+        { Skills : Map<Skill, SkillLevel list>
           Genre : Genre Set
           Location : Location }
+
+    let private levelToInt =
+        function
+        | Novice -> 1
+        | Apprentice -> 2
+        | Adept -> 3
+        | Maester -> 4
+        | GrandMaester -> 5
+
+    let levelFromInt =
+        function
+        | 1 -> Novice |> Some
+        | 2 -> Apprentice |> Some
+        | 3 -> Adept |> Some
+        | 4 -> Maester |> Some
+        | 5 -> GrandMaester |> Some
+        | _ -> None
 
     let rockBandPlayers =
         [
@@ -99,5 +116,27 @@ module FindMusician =
         | Maester -> [ Adept; Maester; GrandMaester ]
         | GrandMaester -> [ Maester; GrandMaester ]
 
-    //let getSearchCriteriaBy (profile : MusicProfile) =
-        
+    let averageLevel levels =
+        levels
+        |> Seq.map (levelToInt >> float)
+        |> Seq.average
+        |> (int >> levelFromInt >> Option.get)
+
+    let getSearchCriteriaByProfile (profile : MusicProfile) =
+        let averageSkillLevelOfUser =
+            profile.Skills
+            |> Map.toList |> List.map snd |> averageLevel
+        let instrumentsInterestedForUser =
+            profile.Genres
+            |> Seq.map playersByGenre
+            |> Seq.filter Option.isSome
+            |> Seq.map Option.get
+            |> Seq.concat
+        let skillsWithLevels =
+            instrumentsInterestedForUser
+            |> Seq.map (fun s ->
+                Instrument s, (Instrument s |> profile.Skills.TryFind |> Option.defaultValue averageSkillLevelOfUser) |> getClosestLevels)
+            |> Map.ofSeq
+        { Skills = skillsWithLevels;
+          Location = profile.UserInfo.Location;
+          Genre = profile.Genres }
