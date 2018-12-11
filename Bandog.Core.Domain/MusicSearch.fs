@@ -8,24 +8,7 @@ module MusicSearch =
           Genre : Genre Set
           Location : Location }
 
-    let private levelToInt =
-        function
-        | Novice -> 1
-        | Apprentice -> 2
-        | Adept -> 3
-        | Maester -> 4
-        | GrandMaester -> 5
-
-    let levelFromInt =
-        function
-        | 1 -> Novice |> Some
-        | 2 -> Apprentice |> Some
-        | 3 -> Adept |> Some
-        | 4 -> Maester |> Some
-        | 5 -> GrandMaester |> Some
-        | _ -> None
-
-    let rockBandPlayers =
+    let rockInstruments =
         [
             Guitar Electric
             Drums
@@ -34,9 +17,9 @@ module MusicSearch =
             Vocals
         ] |> Set.ofList
 
-    let metalBandPlayers = rockBandPlayers
+    let metalInstruments = rockInstruments
 
-    let jazzPlayers =
+    let jazzInstruments =
         [
             Keyboard
             Bass Electric
@@ -49,7 +32,7 @@ module MusicSearch =
             Guitar Acoustic
         ] |> Set.ofList
 
-    let folkPlayers =
+    let folkInstruments =
         [
             Violin
             Flute
@@ -59,7 +42,7 @@ module MusicSearch =
             Cello
         ] |> Set.ofList
 
-    let bluesPlayers =
+    let bluesInstruments =
         [
             Guitar Electric
             Vocals
@@ -67,14 +50,14 @@ module MusicSearch =
             Drums
         ] |> Set.ofList
 
-    let hiphopPlayers =
+    let hiphopInstruments =
         [
             Vocals
             Drums
             Bass Electric
         ] |> Set.ofList
 
-    let classicPlayers =
+    let classicInstruments =
         [
             Keyboard
             Violin
@@ -87,7 +70,7 @@ module MusicSearch =
             Drums
         ] |> Set.ofList
 
-    let soulPlayers =
+    let soulInstruments =
         [
             Keyboard
             Bass Electric
@@ -96,16 +79,16 @@ module MusicSearch =
             Sax
         ] |> Set.ofList
 
-    let playersByGenre =
+    let instrumentsByGenre =
         function
-        | Metal _ -> metalBandPlayers |> Some
-        | Rock _ -> rockBandPlayers |> Some
-        | Jazz _ -> jazzPlayers |> Some
-        | Folk -> folkPlayers |> Some
-        | HipHop _ -> hiphopPlayers |> Some
-        | Blues -> bluesPlayers |> Some
-        | Classic -> classicPlayers |> Some
-        | Soul -> soulPlayers |> Some
+        | Metal _ -> metalInstruments |> Some
+        | Rock _ -> rockInstruments |> Some
+        | Jazz _ -> jazzInstruments |> Some
+        | Folk -> folkInstruments |> Some
+        | HipHop _ -> hiphopInstruments |> Some
+        | Blues -> bluesInstruments |> Some
+        | Classic -> classicInstruments |> Some
+        | Soul -> soulInstruments |> Some
         | _ -> None
 
     let getClosestLevels =
@@ -116,27 +99,38 @@ module MusicSearch =
         | Maester -> [ Adept; Maester; GrandMaester ]
         | GrandMaester -> [ Maester; GrandMaester ]
 
+    let inline median values =
+        match values with
+        | [||] | null -> None
+        | [|x|] -> Some x
+        | arr ->
+            let arr = Array.sort arr
+            arr.[arr.Length / 2] |> Some
+
     let averageLevel levels =
         levels
-        |> Seq.map (levelToInt >> float)
-        |> Seq.average
-        |> (int >> levelFromInt >> Option.get)
+        |> Array.ofSeq
+        |> median
+        |> Option.defaultValue Novice
 
     let getSearchCriteriaByProfile (profile : MusicProfile) =
         let averageSkillLevelOfUser =
             profile.Skills
             |> Map.toList |> List.map snd |> averageLevel
-        let instrumentsInterestedForUser =
+        let instrumentsInterestingForUser =
             profile.Genres
-            |> Seq.map playersByGenre
+            |> Seq.map instrumentsByGenre
             |> Seq.filter Option.isSome
             |> Seq.map Option.get
             |> Seq.concat
         let skillsWithLevels =
-            instrumentsInterestedForUser
+            instrumentsInterestingForUser
             |> Seq.map (fun s ->
-                Instrument s, (Instrument s |> profile.Skills.TryFind |> Option.defaultValue averageSkillLevelOfUser) |> getClosestLevels)
+                Instrument s,
+                (Instrument s
+                 |> profile.Skills.TryFind |> Option.defaultValue averageSkillLevelOfUser) |> getClosestLevels)
             |> Map.ofSeq
         { Skills = skillsWithLevels;
           Location = profile.UserInfo.Location;
           Genre = profile.Genres }
+
