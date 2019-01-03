@@ -4,6 +4,7 @@ module DomainEvents =
     open System
     open DomainTypes
     open CoreCommands
+    open Bandog.Common
 
     type DomainEvent<'T> =
         { EventId : Guid

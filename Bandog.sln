@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Bandog.Core.Domain", "bandog.core.domain\Bandog.Core.Domain.fsproj", "{1B5B6EF1-3696-4D93-B32B-07CB1A6A9763}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Bandog.Common", "Bandog.Common\Bandog.Common.fsproj", "{99D41EBB-D0ED-4AC4-B05E-B55D77768481}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{1B5B6EF1-3696-4D93-B32B-07CB1A6A9763}.Release|x64.Build.0 = Release|Any CPU
 		{1B5B6EF1-3696-4D93-B32B-07CB1A6A9763}.Release|x86.ActiveCfg = Release|Any CPU
 		{1B5B6EF1-3696-4D93-B32B-07CB1A6A9763}.Release|x86.Build.0 = Release|Any CPU
+		{99D41EBB-D0ED-4AC4-B05E-B55D77768481}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99D41EBB-D0ED-4AC4-B05E-B55D77768481}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99D41EBB-D0ED-4AC4-B05E-B55D77768481}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{99D41EBB-D0ED-4AC4-B05E-B55D77768481}.Debug|x64.Build.0 = Debug|Any CPU
+		{99D41EBB-D0ED-4AC4-B05E-B55D77768481}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{99D41EBB-D0ED-4AC4-B05E-B55D77768481}.Debug|x86.Build.0 = Debug|Any CPU
+		{99D41EBB-D0ED-4AC4-B05E-B55D77768481}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99D41EBB-D0ED-4AC4-B05E-B55D77768481}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99D41EBB-D0ED-4AC4-B05E-B55D77768481}.Release|x64.ActiveCfg = Release|Any CPU
+		{99D41EBB-D0ED-4AC4-B05E-B55D77768481}.Release|x64.Build.0 = Release|Any CPU
+		{99D41EBB-D0ED-4AC4-B05E-B55D77768481}.Release|x86.ActiveCfg = Release|Any CPU
+		{99D41EBB-D0ED-4AC4-B05E-B55D77768481}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

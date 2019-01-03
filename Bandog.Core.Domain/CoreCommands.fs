@@ -3,6 +3,7 @@
 module CoreCommands =
     open System
     open DomainTypes
+    open Bandog.Common
 
     type CommandMeta =
         { OperationId : Guid
@@ -20,13 +21,13 @@ module CoreCommands =
 
     type UpdateCommand<'AggregateId, 'Update> = Command<UpdateCommandPayload<'AggregateId, 'Update>>
 
-    type UserCreateCommandPayload =
+    type AddUserCommandPayload =
         { Email : Email
           FullName : LetterString 
           Username : LetterAndDigitString option 
           BirthDate : BirthDate option }
 
-    type UserCreateCommand = Command<UserCreateCommandPayload>
+    type AddUserCommand = Command<AddUserCommandPayload>
 
     type BasicUserProfileUpdate =
         | FullName of LetterString
@@ -42,7 +43,7 @@ module CoreCommands =
 
     type UpdateContactInfoCommand = UpdateCommand<UserId, UserContactInfoUpdate>
 
-    type AddAudioMetaCommand = AudioMeta
+    type AddAudioMetaCommand = Command<AudioMeta>
 
     type AudioMetaUpdate =
         | Duration of TimeSpan
@@ -54,11 +55,13 @@ module CoreCommands =
 
     type UpdateAudioMetaCommand = UpdateCommand<AudioId, AudioMetaUpdate>
 
-    type AddMusicProfileCommand =
+    type AddMusicProfileCommandPayload =
         { Id : UserId 
           Skills : Map<Skill, SkillLevel>
           Degrees : Degree Set
           CollaborationStatus : CollaborationStatus }
+
+    type AddMusicProfileCommand = Command<AddMusicProfileCommandPayload>
 
     type MusicProfileUpdate =
         | AddProfileSkill of Skill * SkillLevel

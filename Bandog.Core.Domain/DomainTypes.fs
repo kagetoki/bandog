@@ -2,6 +2,7 @@
 
 module DomainTypes =
     open System
+    open Bandog.Common
 
     [<Struct>]
     type UserId = 
@@ -143,6 +144,7 @@ module DomainTypes =
           Username  : LetterAndDigitString
           PictureId : PictureId option
           Location  : Location
+          Joined    : DateTimeOffset
           BirthDate : BirthDate option }
 
     type UserContactInfo =

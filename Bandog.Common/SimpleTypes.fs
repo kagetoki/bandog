@@ -1,4 +1,4 @@
-namespace Bandog.Core.Domain
+namespace Bandog.Common
 
 [<AutoOpen>]
 module SimpleTypes =
@@ -21,10 +21,14 @@ module SimpleTypes =
         if f1 input then false
         else not<<f2 <| input
 
+    let inline notNull a = (not<<isNull) a
     let notEmptyString = String.IsNullOrEmpty >> not
     let notWhiteSpaceString = String.IsNullOrWhiteSpace >> not
     let isEmptyString = String.IsNullOrEmpty
     let isWhiteSpaceString = String.IsNullOrWhiteSpace
+    let inline (=~) str1 str2 = String.Equals(str1, str2, StringComparison.InvariantCultureIgnoreCase)
+
+    type nil<'A when 'A : struct and 'A: (new: unit -> 'A) and 'A :> ValueType> = Nullable<'A>
 
     type ValidationError =
         | LettersOnlyAllowed
@@ -35,7 +39,7 @@ module SimpleTypes =
         | DateIsOutOfRange of range: (DateTimeOffset * DateTimeOffset)
         | NumberIsOutOfRange of range: (float * float)
         | InvalidEmail
-        //| InvalidPhone
+        | InvalidInput of message:string
 
     let private tryCreate validate ctor input =
         if validate input then ctor input |> Some
@@ -54,7 +58,7 @@ module SimpleTypes =
     type LetterString = private LetterString of string
         with
         member this.Value = match this with LetterString str -> str
-        static member create str = create (neither String.IsNullOrWhiteSpace nonLettersRegex.IsMatch)
+        static member create str = create (neither String.IsNullOrWhiteSpace nonLettersRegex.IsMatch) LettersOnlyAllowed LetterString str
 
     type LetterAndDigitString = private LetterAndDigitString of string
         with
@@ -64,11 +68,11 @@ module SimpleTypes =
         static member tryCreate str =
             tryCreate (neither isWhiteSpaceString specialCharsRegex.IsMatch) LetterAndDigitString str
 
-    type 'T NonEmptyList = //when 'T : equality =
+    type 'T NonEmptyList =
         { Head : 'T 
           Tail : 'T list }
           with
-          static member ofList list =
+          static member ofList (list: 'T list) =
             match list with
             | [] -> None
             | h::t -> { Head = h; Tail = t} |> Some
@@ -76,8 +80,6 @@ module SimpleTypes =
             this.Head :: this.Tail
           member this.Add item =
             { Head = item; Tail = this.ToList() }
-          //member this.Remove item =
-          //  { this with Tail = List.filter ((<>) item) this.Tail }
 
     type 'T NonEmptySet when 'T : comparison =
         private NonEmptySet of 'T Set
@@ -101,6 +103,9 @@ module SimpleTypes =
     type BirthDate = private BirthDate of DateTimeOffset
         with
         member this.Value = match this with BirthDate d -> d
+        static member create currentDate value =
+            if value > lowestBirthDate && value < currentDate then BirthDate value |> Ok
+            else DateIsOutOfRange (lowestBirthDate, currentDate) |> Error
         static member tryCreate currentDate value =
             if value > lowestBirthDate && value < currentDate then BirthDate value |> Some
             else None

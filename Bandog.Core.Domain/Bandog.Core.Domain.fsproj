@@ -6,12 +6,17 @@
 
   <ItemGroup>
     <Compile Include="Country.fs" />
-    <Compile Include="SimpleTypes.fs" />
     <Compile Include="DomainTypes.fs" />
     <Compile Include="CoreCommands.fs" />
     <Compile Include="DomainEvents.fs" />
     <Compile Include="CoreDomain.Implementation.fs" />
     <Compile Include="MusicSearch.fs" />
+    <Compile Include="CoreDto.fs" />
+    <Compile Include="Validation.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Bandog.Common\Bandog.Common.fsproj" />
   </ItemGroup>
 
 </Project>
