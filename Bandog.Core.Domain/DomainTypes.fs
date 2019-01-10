@@ -105,7 +105,7 @@ module DomainTypes =
     type Genre =
         | Jazz of jazz: JazzKind option
         | Blues
-        | Rock
+        | Rock of rock: RockKind option
         | Metal of metal: MetalKind option
         | Classic
         | Soul
@@ -113,7 +113,6 @@ module DomainTypes =
         | Folk
         | Pop
         | HipHop of hiphop: HipHopKind option
-        | Core
         | Electro of electro: ElectroKind option
 
     type SchoolName = NonEmptyString

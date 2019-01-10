@@ -117,6 +117,7 @@ module CoreCommandDto =
 
     type AddAudioMetaCommandDto = CommandDto<CoreQueryDto.AudioMetaDto>
 
+    [<CLIMutable>]
     type AudioMetaUpdatePayloadDto =
         { Duration : TimeSpan
           Title : string
@@ -125,4 +126,15 @@ module CoreCommandDto =
           AddGenre : GenreDto
           RemoveGenre : GenreDto }
 
-    type UpdateAudoMetaCommandDto = CommandDto<int>
+    [<CLIMutable>]
+    type AudioMetaUpdateDto =
+        { Id : Guid
+          Duration : TimeSpan nil
+          Title : string
+          AddSkill : SkillDto[]
+          RemoveSkill : SkillDto[]
+          AddGenre : GenreDto[]
+          RemoveGenre: GenreDto[] }
+
+    type UpdateAudioMetaCommandDto = CommandDto<AudioMetaUpdateDto>
+

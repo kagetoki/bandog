@@ -24,7 +24,7 @@ module SimpleTypes =
     let inline notNull a = (not<<isNull) a
     let notEmptyString = String.IsNullOrEmpty >> not
     let notWhiteSpaceString = String.IsNullOrWhiteSpace >> not
-    let isEmptyString = String.IsNullOrEmpty
+    let inline isEmptyString str = String.IsNullOrEmpty str
     let isWhiteSpaceString = String.IsNullOrWhiteSpace
     let inline (=~) str1 str2 = String.Equals(str1, str2, StringComparison.InvariantCultureIgnoreCase)
 
@@ -34,7 +34,7 @@ module SimpleTypes =
         | LettersOnlyAllowed
         | LettersAndDigitsOnlyAllowed
         | StringIsEmpty
-        | ListIsEmpty
+        | ListIsEmpty of listName: string
         | IllegalCharacters of string
         | DateIsOutOfRange of range: (DateTimeOffset * DateTimeOffset)
         | NumberIsOutOfRange of range: (float * float)
@@ -94,7 +94,7 @@ module SimpleTypes =
             let newSet = set.Remove item
             if newSet.IsEmpty then set else newSet
             |> NonEmptySet
-        static member ofSeq s =
+        static member ofSeq (s: 'T seq) =
             let set = Set.ofSeq s
             if set.IsEmpty then None
             else NonEmptySet set |> Some

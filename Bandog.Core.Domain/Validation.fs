@@ -1,13 +1,14 @@
 ﻿namespace Bandog.Core.Domain
 
+open System
+open Bandog.Common
+open Microsoft.FSharp.Reflection
+open Bandog.Core.Domain.ValueObjectsDto
+open CoreCommands
+open DomainTypes
+open CoreCommandDto
+
 module Validation =
-    open System
-    open Bandog.Common
-    open Microsoft.FSharp.Reflection
-    open Bandog.Core.Domain.ValueObjectsDto
-    open CoreCommands
-    open DomainTypes
-    open CoreCommandDto
 
     let tryParseEmptyDUCase<'DU> str =
         if FSharpType.IsUnion typeof<'DU> |> not then None
@@ -16,7 +17,7 @@ module Validation =
         | null | "" -> None
         | str ->
             FSharpType.GetUnionCases typeof<'DU>
-            |> Array.tryFind (fun c -> c.Name =~ str)
+            |> Array.tryFind (fun c -> c.Name =~ str && (c.GetFields() |> Array.isEmpty))
             |> Option.map (fun case -> FSharpValue.MakeUnion(case, [||]) :?> 'DU)
 
     let validateLocation (dto : LocationDto) =
@@ -30,25 +31,30 @@ module Validation =
                   City = city }
         }
 
+    let validateArray validate array =
+        array
+        |> Array.map validate
+        |> Result.ofArray
+
     let validateSkill (dto: SkillDto) =
         if dto.Skill |> isWhiteSpaceString then InvalidInput "skill can't be empty" |> Error
         else
         match dto.SkillKind, dto.InstrumentKind with
-        | SkillKind.Instrument, kind when isEmptyString kind ->
+        | SkillKind.Instrument, (null | "") ->
             tryParseEmptyDUCase<Instrument> dto.Skill
             |> Result.ofOption (InvalidInput "unknown instrument")
             |> Result.map Instrument
-        | SkillKind.Instrument, "electric" ->
-            match dto.Skill.ToLower() with
-            | "guitar" -> Guitar Electric |> Instrument |> Ok
-            | "bass" -> Bass Electric |> Instrument |> Ok
-            | _ -> InvalidInput "skill" |> Error
-        | SkillKind.Instrument, "acoustic" ->
-            match dto.Skill.ToLower() with
-            | "guitar" -> Guitar Acoustic |> Instrument |> Ok
-            | "bass" -> Bass Acoustic |> Instrument |> Ok
-            | _ -> InvalidInput "skill" |> Error
-        | SkillKind.MusicMaking, kind when isEmptyString kind ->
+        | SkillKind.Instrument, (("electric"|"acoustic") as kind) ->
+            result {
+                let! kind = tryParseEmptyDUCase<InstrumentKind> kind |> Result.ofOption (InvalidInput "")
+                let! instrument =
+                    match dto.Skill.ToLower() with
+                    | "guitar" -> Guitar |> Ok
+                    | "bass" -> Bass |> Ok
+                    | _ -> InvalidInput "unknown skill" |> Error
+                return instrument kind |> Instrument
+            }
+        | SkillKind.MusicMaking, (null | "") ->
             tryParseEmptyDUCase<MusicMakingSkill> dto.Skill
             |> Result.ofOption (InvalidInput "music making skill")
             |> Result.map MusicMakingSkill
@@ -63,7 +69,31 @@ module Validation =
                   CommandId = metaDto.CommandId
                   TimeStamp = metaDto.TimeStamp}
         }
-        
+ 
+    let validateGenre (dto:GenreDto) =
+        match dto.Genre, dto.GenreKind with
+        | ((null|""), _) -> InvalidInput "empty genre" |> Error
+        | "classic", (null | "") -> Ok Classic
+        | "ambient", (null | "") -> Ok Ambient
+        | "folk", (null | "") -> Ok Folk
+        | "pop", (null | "") -> Ok Pop
+        | "blues", (null | "") -> Ok Blues
+        | "soul", (null | "") -> Ok Soul
+        | "rock", rockKind ->
+            tryParseEmptyDUCase<RockKind> rockKind |> Rock |> Ok
+        | "jazz", jazzKind ->
+            tryParseEmptyDUCase<JazzKind> jazzKind |> Jazz |> Ok
+        | "metal", metalKind ->
+            tryParseEmptyDUCase<MetalKind> metalKind |> Metal |> Ok
+        | "hiphop", hipHopKind ->
+            tryParseEmptyDUCase<HipHopKind> hipHopKind |> HipHop |> Ok
+        | "electro", electroKind ->
+            tryParseEmptyDUCase<ElectroKind> electroKind |> Electro |> Ok
+        | _ -> InvalidInput "unknown genre" |> Error
+
+    let validateSkills = validateArray validateSkill
+
+    let validateGenres = validateArray validateGenre
 
     let validateAddBasicProfileCommand currentDate (dto: AddUserCommandDto)
             : Result<AddUserCommand, ValidationError> =
@@ -117,9 +147,49 @@ module Validation =
             let! meta = validateMeta dto.Meta
             let audioDto = dto.Payload
             let! title = audioDto.Title |> NonEmptyString.create
-            let! appliedSkills =
-                    audioDto.AppliedSkills
-                    |> Array.map validateSkill
-                    |> Result.ofArray
-            return ()
+            let! appliedSkills = validateSkills audioDto.AppliedSkills
+            let! appliedSkills = appliedSkills |> NonEmptySet.ofSeq |> Result.ofOption (ListIsEmpty "skills")
+            let! genres = validateGenres audioDto.Genre
+            let! genres = genres |> NonEmptySet.ofSeq |> Result.ofOption (ListIsEmpty "genres")
+            return
+                { Meta = meta
+                  Payload =
+                   { Id = audioDto.Id
+                     UserId = UserId audioDto.UserId
+                     Title = title
+                     AppliedSkills = appliedSkills
+                     Genre = genres
+                     Duration = audioDto.Duration } }
+        }
+
+    let validateUpdateAudioMetaCommand (dto: UpdateAudioMetaCommandDto)
+        : Result<UpdateAudioMetaCommand, ValidationError> =
+        result {
+            let! meta = validateMeta dto.Meta
+            let validateUpdateArray validate update = Array.map (validate >> Result.map update)
+            let validateGenresUpdates = validateUpdateArray validateGenre
+            let validateSkillUpdates = validateUpdateArray validateSkill
+            let payload = dto.Payload
+            let! updates =
+                [
+                    if payload.Duration.HasValue then
+                        yield Duration payload.Duration.Value |> Ok
+                    if notNull payload.Title then
+                        yield payload.Title |> NonEmptyString.create |> Result.map Title
+                    if notNull payload.AddGenre then
+                        yield! payload.AddGenre
+                            |> validateGenresUpdates AddGenre
+                    if notNull payload.RemoveGenre then
+                        yield! payload.RemoveGenre |> validateGenresUpdates RemoveGenre
+                    if notNull payload.AddSkill then
+                        yield! payload.AddSkill |> validateSkillUpdates AddSkill
+                    if notNull payload.RemoveSkill then
+                        yield! payload.RemoveSkill |> validateSkillUpdates RemoveSkill
+                ] |> Result.ofList
+            let! updates = updates |> NonEmptyList.ofList |> Result.ofOption (ListIsEmpty "audio updates")
+            return
+                { Meta = meta
+                  Payload =
+                  { AggregateId = payload.Id
+                    Payload = updates } }
         }
